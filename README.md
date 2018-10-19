@@ -53,42 +53,25 @@ Note that the `schedule` method can take any callable object as an argument (sta
 In order to improve performances, it is advised to schedule the execution of callable objects in bulk, by providing an array of callable objects to schedule rather than a single one. The `schedule_bulk` API is dedicated to bulk insertion of callable objects into the thread-pool.
 
 ```c++
-
-/**
- * \brief The number of callables to be scheduled.
- */
-static const size_t iterations = 100;
-
 /**
  * \brief An array of callable objects to schedule.
  */
-static std::function<void()> callables[iterations] = {};
+static std::function<void()> callables[100];
 
-/**
- * \brief A static function worker.
- */
-int static_void_function(int argument) {
- // Have this thread sleep for 100ms.
- std::this_thread::sleep_for(std::chrono::milliseconds(100));
- return (argument + 1);
-}
-
-int main() {
- thread::pool::pool_t pool(std::thread::hardware_concurrency() + 1);
- 
- // Filling our array with `iterations` amount of functions,
- // bound to the number `42`.
- std::fill_n(callables, iterations, std::bind(static_void_function, 42));
- // Scheduling the execution in bulk.
- auto result = pool.schedule_bulk(callables, iterations);
- // Log whether the insertion was successful.
- std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
- // Stopping the thread-loop and waiting for threads to finish.
- pool.stop().await();
- return (0);
-}
-
+auto result = pool.schedule_bulk(array_of_callables, sizeof(array_of_callables));
+// Log whether the insertion was successful.
+std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
 ```
 
-## Stopping worker execution
+The `schedule_bulk` method only returns a boolean value indicating whether the bulk insertion has been successful or not. For a complete sample of how to schedule callables in bulk into the thread-pool have a look at the [`bulk_insertion`]() example.
+
+## Stopping the thread pool
+
+When you want to interrupt your workers and stop all the threads currently running in your thread-pool, you can use the `stop` method. This method will indicate to the running threads that they should stop their current work.
+
+```c++
+// Scheduling the interruption of threads execution,
+// and awaiting for them to have completed.
+pool.stop().await();
+```
 
