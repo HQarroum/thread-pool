@@ -48,22 +48,31 @@ std::cout << result.get() << std::endl;
 
 Note that the `schedule` method can take any callable object as an argument (static functions, lambda functions, pointers to functions, etc.), and will deduce the appropriate return type of the generated `std::future`.
 
-## Scheduling callables in bulk
+## Bulk scheduling
 
 In order to improve performances, it is advised to schedule the execution of callable objects in bulk, by providing an array of callable objects to schedule rather than a single one. The `schedule_bulk` API is dedicated to bulk insertion of callable objects into the thread-pool.
 
 ```c++
-/**
- * \brief An array of callable objects to schedule.
- */
-static std::function<void()> callables[100];
-
+// Scheduling an array of callables in bulk.
 auto result = pool.schedule_bulk(array_of_callables, sizeof(array_of_callables));
 // Log whether the insertion was successful.
 std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
 ```
 
 The `schedule_bulk` method only returns a boolean value indicating whether the bulk insertion has been successful or not. For a complete sample of how to schedule callables in bulk into the thread-pool have a look at the [`bulk_insertion`]() example.
+
+## Functor-style schedules
+
+In addition to the `schedule` method, the thread-pool implementation provides a way to generate functors that can be called like a regular function, but which will instead schedule the execution of your callable on the thread-pool. The functor based syntax provides a more natural way to generate callables and to actually call them.
+
+```c++
+// Binding a callable function with a thread-pool instance.
+auto callable = thread::pool::bind(pool, static_int_function);
+// Scheduling the callable on the thread-pool.
+auto result = callable(42);
+// Logging the result returned by the callable.
+std::cout << result.get() << std::endl;
+```
 
 ## Stopping the thread pool
 
