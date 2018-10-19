@@ -90,15 +90,15 @@ A `thread::pool::parameterized_pool_t<>` class exists in this implementation and
 The number of items that the thread-pool will attempt to dequeue has an impact on performances. To customize this, we have defined a few constants that you can use as hints for thread-pool to use when dequeuing callables.
 
 
-   - **WORK_PARTITIONING_LIGHT** - Hint indicating the use of lightweight processing of tasks within a worker (less elements will be dequeued).
+   - [`WORK_PARTITIONING_LIGHT`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L22) - Hint indicating the use of lightweight processing of tasks within a worker (less elements will be dequeued).
 
-   - **WORK_PARTITIONING_SPARSE** - Hint indicating the use of sparse processing of tasks within a worker.
+   - [`WORK_PARTITIONING_SPARSE`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L28) - Hint indicating the use of sparse processing of tasks within a worker.
     
-   - **WORK_PARTITIONING_BALANCED** - Hint indicating the use of a balanced processing of tasks within a worker.
+   - [`WORK_PARTITIONING_BALANCED`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L34) - Hint indicating the use of a balanced processing of tasks within a worker.
     
-   - **WORK_PARTITIONING_HEAVY** - Hint indicating the use of heavy processing of tasks within a worker.
+   - [`WORK_PARTITIONING_HEAVY`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L40) - Hint indicating the use of heavy processing of tasks within a worker.
     
-   - **WORK_PARTITIONING_HEAVIER** - Hint indicating the use of heavier processing of tasks within a worker.
+   - [`WORK_PARTITIONING_HEAVIER`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L46) - Hint indicating the use of heavier processing of tasks within a worker.
 
 You can pass one of these constants as a first template parameter to the `parameterized_pool_t` when creating it (more elements will be dequeued).
 
