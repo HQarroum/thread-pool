@@ -37,18 +37,21 @@ namespace thread {
           : pool_(pool), callable_(foo) {}
 
         /**
-        * \brief Schedules the function call on the given
+        * \brief Schedules the function call on the bound
         * thread pool.
         */
-        template <typename... Argss>
-        std::future<R> operator()(Argss... args) {
-          //std::function<R()> bound = std::bind(callable_, std::forward<Argss>(args)...);
-          return (pool_.schedule(callable_, std::forward<Argss>(args)...));
+        template <typename... FunctionArgs>
+        std::future<R> operator()(FunctionArgs... args) {
+          return (pool_.schedule(callable_, std::forward<FunctionArgs>(args)...));
         }
       };
-
+      
       template<class... Result> using FunctionType = std::function<void(Result...)>;
       
+      /**
+       * \brief Generalization of a traits utility class used
+       * for type introspection purposes.
+       */
       template<class T> struct traits;
 
       template<class C, class Ret, class... Args>
@@ -61,29 +64,51 @@ namespace thread {
           using arg = std::tuple_element<i, all_args>;
       };
 
+      /**
+       * \brief Binds a given pointer to function to a `pool_t` instance,
+       * and returns a callable object which will dispatch the call on the
+       * thread pool.
+       */
+      template <typename Return, typename ...Arguments>
+      static callable_t<Return, Arguments...> bind(pool_t& pool, Return(*x)(Arguments...)) {
+        return (callable_t<Return, Arguments...>(pool, x));
+      }
+
+      /**
+       * \brief Binds a given movable callable to a `pool_t` instance,
+       * and returns a callable object which will dispatch the call on the
+       * thread pool.
+       */
       template <typename... Params, typename L>
       static callable_t<
         typename traits<decltype(&L::operator())>::return_value,
         Params... 
       > bind(pool_t& pool, L&& lambda) {
-        using function_t = typename traits<decltype(&L::operator())>::type;
         using return_t = typename traits<decltype(&L::operator())>::return_value;
         return (callable_t<return_t, Params...>(pool, std::forward<L>(lambda) ));
       }
 
+      /**
+       * \brief Binds a given callable reference to a `pool_t` instance,
+       * and returns a callable object which will dispatch the call on the
+       * thread pool.
+       */
       template <typename... Params, typename L>
       static callable_t<
         typename traits<decltype(&L::operator())>::return_value,
         Params... 
       > bind(pool_t& pool, L& lambda) {
-        using function_t = typename traits<decltype(&L::operator())>::type;
         using return_t = typename traits<decltype(&L::operator())>::return_value;
-        //using args_ = typename traits<decltype(&L::operator())>::foo;
         return (callable_t<return_t, Params...>(pool, std::forward<L>(lambda)));
       }
 
+      /**
+       * \brief Binds a given `std::function` reference to a `pool_t` instance,
+       * and returns a callable object which will dispatch the call on the
+       * thread pool.
+       */
       template <typename Return, typename ...Arguments>
-      static callable_t<Return, Arguments...> bind(pool_t& pool, std::function<Return(Arguments...)> x) {
+      static callable_t<Return, Arguments...> bind(pool_t& pool, std::function<Return(Arguments...)>& x) {
         return (callable_t<Return, Arguments...>(pool, x));
       }
   };
