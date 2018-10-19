@@ -19,3 +19,12 @@ This project is an implementation of a thread-pool following C++11 semantics. It
 This project uses the lock-free [`concurrent-queue`](https://github.com/cameron314/concurrentqueue/) implementation provided by `moodycamel` as its underlying thread-safe queuing mechanism for task executions to be spread amongst different worker threads.
 
 ## Usage
+
+To create a thread-pool instance, you simply call its constructor by providing it with the initial number of threads to provision your thread-pool instance with.
+
+```c++
+thread::pool::pool_t pool(std::thread::hardware_concurrency() + 1);
+```
+
+> Note that `std::thread::hardware_concurrency` returns the number of physical concurrent threads supported by your system.
+
