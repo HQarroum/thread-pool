@@ -71,7 +71,7 @@ In order to improve performances, it is advised to schedule the execution of cal
 
 ```c++
 // Scheduling an array of callables in bulk.
-auto result = pool.schedule_bulk(array_of_callables, sizeof(array_of_callables));
+auto result = pool.schedule_bulk(array_of_callables, length));
 // Log whether the insertion was successful.
 std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
 ```
@@ -173,7 +173,7 @@ In this context, you should in fact rarely be invoking the `stop` or `await` met
  // The thread pool creates 5 worker threads upon construction.
  thread::pool::pool_t pool(5);
  // Scheduling workers.
- pool.schedule_bulk(workers, sizeof(workers));
+ pool.schedule_bulk(workers, length);
 }
 // The thread pool and the worker threads are now terminated.
 ```
