@@ -91,9 +91,22 @@ auto result = callable(42);
 std::cout << result.get() << std::endl;
 ```
 
+### Binding anonymous lambda
+
+While argument deduction will work seamlessly with other type of callables, in order for the compiler to deduce at compile-time the arguments of an anonymous lambda function provided as an argument to `thread::pool::bind`, you need to provide their types as template parameters.
+
+```c++
+// Binding using argument types as template parameters.
+auto sum = thread::pool::bind<int, int>(pool, [] (int a, int b) {
+  return (a + b);
+});
+// Invoking the generated callable.
+sum(1, 2);
+```
+
 ## Pool paramerization
 
-A `thread::pool::parameterized_pool_t<>` class exists in this implementation and allows you to customized the behavior of the thread-pool at compile time. The thread-pool is made such that workers will dequeue callables from the internal queue in bulk in order to improve performances, as such two parameters have been defined to alter the inner workings of the pool :
+A `thread::pool::parameterized_pool_t` class exists in this implementation and allows you to customized the behavior of the thread-pool at compile time. The thread-pool is made such that workers will dequeue callables from the internal queue in bulk in order to improve performances, as such two parameters have been defined to alter the inner workings of the pool :
 
 ### Maximum items to dequeue
 
