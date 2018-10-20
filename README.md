@@ -134,7 +134,7 @@ thread::pool::parameterized_pool_t<thread::pool::WORK_PARTITIONING_LIGHT> pool(
 
 > If you wish to have absolute control on this number, rather than using hints, you can safely pass a custom integer instead of one of the provided constants.
 
-## Maximum time to block
+### Maximum time to block
 
 Before the internal worker threads actually executes the enqueued callables, they will block awaiting for an element in the internal queue to be available. To allow clients of the thread-pool to stop it, a maximum amount of time that the worker thread spends waiting is used, and each time we'll reach that timeout, the worker thread will unblock and check whether it needs to stop its processing.
 
