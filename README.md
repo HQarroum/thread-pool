@@ -110,7 +110,7 @@ A `thread::pool::parameterized_pool_t` class exists in this implementation and a
 
 ### Maximum items to dequeue
 
-The number of items that the thread-pool will attempt to dequeue has an impact on performances. To customize this, we have defined a few constants that you can use as hints for thread-pool to use when dequeuing callables.
+The number of items that the thread-pool will attempt to dequeue has an impact on performances. To customize this, we have defined a few constants that you can use as hints for thread-pool to use when dequeuing callables. **When dequeued, callables will be stored on the worker thread's stack, make sure that whatever hint you use, it can fit your thread stack size**.
 
 
    - [`WORK_PARTITIONING_LIGHT`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L22) - Hint indicating the use of lightweight processing of tasks within a worker (less elements will be dequeued).
@@ -172,13 +172,13 @@ In this context, you should in fact rarely be invoking the `stop` or `await` met
 {
  // The thread pool creates 5 worker threads upon construction.
  thread::pool::pool_t pool(5);
- 
  // Scheduling workers.
  pool.schedule_bulk(workers, sizeof(workers));
- 
 }
 // The thread pool and the worker threads are now terminated.
 ```
+
+> Note however that in the above example the execution of all the given workers is not guaranteed. Upon destruction, the thread-pool instance will prompt the worker threads to finish their execution, which may happen before every elements in the internal queue have been processed.
 
 ## Examples
 
