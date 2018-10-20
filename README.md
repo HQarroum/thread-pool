@@ -136,7 +136,7 @@ thread::pool::parameterized_pool_t<thread::pool::WORK_PARTITIONING_LIGHT> pool(
 
 ## Maximum time to block
 
-Before the internal worker threads actually executes the provided callables, it blocks awaiting for an element in the internal queue to be available. To allow clients of the thread-pool to stop it, a maximum amount of time that the worker thread spends waiting is used, and each time we'll reach that timeout, the worker thread will unblock and check whether it needs to stop its processing.
+Before the internal worker threads actually executes the enqueued callables, they will block awaiting for an element in the internal queue to be available. To allow clients of the thread-pool to stop it, a maximum amount of time that the worker thread spends waiting is used, and each time we'll reach that timeout, the worker thread will unblock and check whether it needs to stop its processing.
 
 This parameter can have both an impact on performances and on the reactivity of the pool. If the timeout is too low, a `stop` operation will be quicker, but at the expense of worker threads to consume more CPU cycles unblocking and checking whether they should stop their process. If it is too high, CPU cycles waiste will be lower, but the worker threads will react more slowly to a `stop` operation.
 
@@ -152,12 +152,32 @@ In the above example, worker threads will wait 2 seconds for elements in the que
 
 ## Stopping the thread pool
 
-When you want to interrupt your workers and stop all the threads currently running in your thread-pool, you can use the `stop` method. This method will indicate to the running threads that they should stop their current work.
+### Explicit interruption
+
+When you want to interrupt your workers and stop all the threads currently running in your thread-pool explicitely, you can use the `stop` method. This method will indicate to the running threads that they should stop their current work. The `await` method will synchronously wait for them to finish.
 
 ```c++
 // Scheduling the interruption of threads execution,
 // and awaiting for them to have completed.
 pool.stop().await();
+```
+
+### Using RAII
+
+This thread-pool implementation follow the [`RAII`](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) pattern, meaning that upon destruction, the thread pool object will stop the running thread. Note however that because the thread in which the thread-pool is initialized owns the worker threads, the destruction needs to synchronously wait for the termination of the threads upon destruction.
+
+In this context, you should in fact rarely be invoking the `stop` or `await` methods explicitely since this will be taken care of by the destructor of a thread pool instance.
+
+```c++
+{
+ // The thread pool creates 5 worker threads upon construction.
+ thread::pool::pool_t pool(5);
+ 
+ // Scheduling workers.
+ pool.schedule_bulk(workers, sizeof(workers));
+ 
+}
+// The thread pool and the worker threads are now terminated.
 ```
 
 ## Examples
@@ -166,4 +186,4 @@ Different sample usages of the thread-pool can be found in the [examples](exampl
 
 ## Tests
 
-
+Different unit tests and benchmarks are available under the [tests](tests/) directory.
