@@ -17,7 +17,7 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 
 ## Description
 
-This project is an implementation of a thread-pool following C++11 semantics. It aims to make it very easy to implement a [producer-consumer pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem) following C++11 semantics with relatively high performances, although other types of patterns can be implemented on top of this project.
+This project is an implementation of a lock-free thread-pool in C++. It aims to make it very easy to implement a [producer-consumer pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem) following C++11 semantics with relatively high performances, although other types of patterns can be implemented on top of this project.
 
 <p align="center"><br><br>
  <img width="450" src="docs/controlled-producer-consumer.png" />
@@ -27,13 +27,13 @@ The implementation uses the lock-free [`concurrent-queue`](https://github.com/ca
 
 ## Usage
 
-To create a thread-pool instance, you simply call its constructor by providing it with the initial number of threads to provision your thread-pool instance with.
+To create a thread-pool instance, you call its constructor by providing it with the initial number of threads to provision your thread-pool instance with.
 
 ```c++
 thread::pool::pool_t pool(std::thread::hardware_concurrency() + 1);
 ```
 
-> Note that `std::thread::hardware_concurrency` returns the number of physical concurrent threads supported by your system. We add 1, since this API can return 0 if it was not able to compute the amount of concurrent threads.
+> Note that `std::thread::hardware_concurrency` returns the number of physical concurrent threads supported by your system. We add 1, since this API can return zero if it was not able to compute the amount of concurrent threads.
 
 ## Scheduling a callable
 
@@ -44,16 +44,27 @@ The `pool_t` class can schedule the execution of callable objects across your wo
  * \brief Schedules the execution of a lambda function
  * taking an integer and returning another integer.
  */
-auto result = pool.schedule([] (int number) {
+auto worker = [] (int number) {
  std::cout << "Worker " << std::this_thread::get_id() << " invoked" << std::endl;
  return (number + 1);
-}, 42);
+};
+
+// Scheduling the execution of the worker.
+auto result = pool.schedule(worker, 42);
 
 // Will block until the result is available.
 std::cout << result.get() << std::endl;
 ```
 
-Note that the `schedule` method can take any callable object as an argument (static functions, lambda functions, pointers to functions, etc.), and will deduce the appropriate return type of the generated `std::future`.
+The `schedule` method can take any callable object as an argument (static functions, lambda functions, pointers to functions, etc.), and will deduce the appropriate return type of the generated `std::future`. If the scheduling of the given worker failed, an [`std::length_error`](https://en.cppreference.com/w/cpp/error/length_error) exception will be thrown with a description of the error.
+
+## Schedule and forget
+
+If you do not need to retrieve the result of your work at call-time, you can use the `schedule_and_forget` method which has a lower overhead in terms of memory usage and performances than the `schedule` method. This method will never throw exceptions.
+
+```c++
+auto succeeded = pool.schedule_and_forget(worker, 42);
+```
 
 ## Bulk scheduling
 
