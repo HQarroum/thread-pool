@@ -110,7 +110,7 @@ A `thread::pool::parameterized_pool_t` class exists in this implementation and a
 
 ### Maximum items to dequeue
 
-The number of items that the thread-pool will attempt to dequeue has an impact on performances. To customize this, we have defined a few constants that you can use as hints for thread-pool to use when dequeuing callables. **When dequeued, callables will be stored on the worker thread's stack, make sure that whatever hint you use, it can fit your thread stack size**.
+The number of items that the thread-pool will attempt to dequeue has an impact on performances. To customize this, we have defined a few constants that you can use as hints for thread-pool to use when dequeuing callables. Note that when dequeued by workers, callables will be stored on the worker thread's stack, make sure that whatever hint you use, it can fit your thread stack size.
 
 
    - [`WORK_PARTITIONING_LIGHT`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L22) - Hint indicating the use of lightweight processing of tasks within a worker (less elements will be dequeued).
