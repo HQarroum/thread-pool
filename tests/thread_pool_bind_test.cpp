@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../thread_pool.hpp"
-#include "../thread_pool_callable.hpp"
+#include "../includes/thread_pool.hpp"
+#include "../includes/thread_pool_callable.hpp"
 #include "./executor/async_executor.hpp"
 
 /**
@@ -49,20 +49,27 @@ int static_int_function(int foo) {
 int main(int argc, char* argv[]) {
   thread::pool::pool_t pool(concurrency);
 
-  // Schedule a `static_lambda` test.
-  auto static_lambda_result = pool.schedule(static_lambda, "hello_static_lambda");
-  std::cout << "[+] `static_lambda` result : " << static_lambda_result.get() << std::endl;
+  // Bind on a `static_lambda` test.
+  auto bound_static_lambda_input = "hello_static_lambda";
+  auto bound_static_lambda_function = thread::pool::bind<const std::string&>(pool, static_lambda);
+  auto bound_static_lambda_result = bound_static_lambda_function(bound_static_lambda_input).get();
+  std::cout << "[+] `static_lambda` result : " << bound_static_lambda_result << std::endl;
+  assert(bound_static_lambda_result == bound_static_lambda_input);
 
   
-  // Schedule a `local_lambda` test.
-  auto local_lambda = [] (const std::string& foo) {
+  // Bind on a `local_lambda` test.
+  auto local_lambda_function_input = "hello_local_lambda";
+  auto local_lambda = [&local_lambda_function_input] (const std::string& foo) {
+    assert(foo == local_lambda_function_input);
     executor.execute_async([foo] () {
       std::cout << "[*] local_lambda called with value " << foo << std::endl;
     });
-    return (1);
+    return (foo.length());
   };
-  auto local_lambda_result = pool.schedule(local_lambda, "hello_local_lambda");
-  std::cout << "[+] `local_lambda` result : " << local_lambda_result.get() << std::endl;
+  auto local_lambda_function = thread::pool::bind<const std::string&>(pool, local_lambda);
+  auto local_lambda_result = local_lambda_function(local_lambda_function_input).get();
+  std::cout << "[+] `local_lambda` result : " << local_lambda_result << std::endl;
+  assert(local_lambda_result == ::strlen(local_lambda_function_input));
   
 
   // Bind on `static_void_function` test.
@@ -71,9 +78,11 @@ int main(int argc, char* argv[]) {
   
 
   // Bind on `bound_static_int_function` test.
+  auto bound_static_int_input = 42;
   auto bound_static_int_function = thread::pool::bind(pool, static_int_function);
-  auto static_int_function_result = bound_static_int_function(42);
-  std::cout << "[+] static_int_function result : " << static_int_function_result.get() << std::endl;
+  auto static_int_function_result = bound_static_int_function(bound_static_int_input).get();
+  std::cout << "[+] static_int_function result : " << static_int_function_result << std::endl;
+  assert(bound_static_int_input == static_int_function_result);
 
 
   // Bind on anonymous void lambda test.
@@ -101,17 +110,10 @@ int main(int argc, char* argv[]) {
     });
     return (a + b);
   });
-  auto anonymous_sum_lambda_result = bound_anonymous_sum_lambda(1, 2);
-  std::cout << "[+] Anonymous (sum) lambda result : " << anonymous_sum_lambda_result.get() << std::endl;
+  auto anonymous_sum_lambda_result = bound_anonymous_sum_lambda(1, 2).get();
+  std::cout << "[+] Anonymous (sum) lambda result : " << anonymous_sum_lambda_result << std::endl;
+  assert(anonymous_sum_lambda_result == 3);
 
-  // Dequeuing and outputing logs from the workers.
-  async_executor_t::callable_t callable;
-  while (executor.dequeue(callable)) {
-    callable();
-  }
-
-  // Stopping workers and waiting them to finish.
-  pool.stop().await();
-
-  return (EXIT_SUCCESS);
+  // Running the event loop.
+  return (executor.run());
 }

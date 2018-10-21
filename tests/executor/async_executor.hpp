@@ -1,5 +1,5 @@
 #include <functional>
-#include "../../blocking_concurrent_queue.hpp"
+#include "../../includes/blocking_concurrent_queue.hpp"
 
 struct async_executor_t {
 
@@ -23,6 +23,19 @@ struct async_executor_t {
    */
   bool dequeue(callable_t& callable) {
     return (queue.wait_dequeue_timed(callable, 0));
+  }
+
+  /**
+   * \brief Runs an event loop until the internal loop
+   * is empty.
+   */
+  int run() {
+    // Dequeuing and outputing logs from the workers.
+    async_executor_t::callable_t callable;
+    while (dequeue(callable)) {
+      callable();
+    }
+    return (0);
   }
 
 private:
