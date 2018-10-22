@@ -84,16 +84,16 @@ In addition to the `schedule` method, the thread-pool implementation provides a 
 
 ```c++
 // Binding a callable function with a thread-pool instance.
-auto callable = thread::pool::bind(pool, static_int_function);
+auto callable = thread::pool::bind(pool, my_function);
 // Scheduling the callable on the thread-pool.
 auto result = callable(42);
 // Logging the result returned by the callable.
 std::cout << result.get() << std::endl;
 ```
 
-### Binding anonymous lambda
+### Binding lambda functions
 
-While argument deduction will work seamlessly with other type of callables, in order for the compiler to deduce at compile-time the arguments of an anonymous lambda function provided as an argument to `thread::pool::bind`, you need to provide their types as template parameters.
+While argument deduction will work seamlessly with other type of callables, in order for the compiler to deduce at compile-time the arguments of a lambda function provided as an argument to `thread::pool::bind`, you need to provide their types as template parameters.
 
 ```c++
 // Binding using argument types as template parameters.
@@ -103,6 +103,21 @@ auto sum = thread::pool::bind<int, int>(pool, [] (int a, int b) {
 // Invoking the generated callable.
 sum(1, 2);
 ```
+
+## Working with tokens
+
+The underlying `moodycamel` queue used in this thread-pool implementation can optimize the processing of queued elements by using consumer and producer tokens ([read more](https://github.com/cameron314/concurrentqueue/#tokens)). When dequeuing elements from the queue, the thread-pool already uses an implicit consumer token which is bound to each worker thread.
+
+If you are using multiple producers spread across multiple threads in your implementation, you might want to create a new consumer token which is unique for the lifetime of that thread. Below is an example of how to create such a producer token.
+
+```c++
+// Creating a new producer token.
+auto token = pool.create_token_of<thread::pool::producer_token_t>();
+// Scheduling a callable using the producer token.
+auto result = pool.schedule(token, my_function);
+```
+
+Every scheduling method (`schedule`, `schedule_and_forget` and `schedule_bulk`) can take an optional producer token as a first argument. If no token is given, scheduling will be done without using tokens.
 
 ## Pool paramerization
 
