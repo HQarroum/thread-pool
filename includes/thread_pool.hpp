@@ -216,17 +216,9 @@ namespace thread {
        * the internal queue.
        */
       template <typename T>
-      typename std::enable_if<std::is_same<T, producer_token_t>::value, producer_token_t>::type
-      create_token_of() {
-        return (T(tasks_));
-      }
-
-      /**
-       * \brief Creates a new consumer token associated with
-       * the internal queue.
-       */
-      template <typename T>
-      typename std::enable_if<std::is_same<T, consumer_token_t>::value, consumer_token_t>::type
+      typename std::enable_if<
+        std::is_same<T, producer_token_t>::value || std::is_same<T, consumer_token_t>::value, T
+      >::type
       create_token_of() {
         return (T(tasks_));
       }
