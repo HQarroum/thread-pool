@@ -33,7 +33,7 @@ int main() {
  // Scheduling the execution in bulk.
  auto result = pool.schedule_bulk(producer_token, callables, iterations);
  // Log whether the insertion was successful.
- std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
+ std::cout << "The insertion has " << (result ? "succeeded." : "failed.") << std::endl;
  assert(result == true);
  return (0);
 }
