@@ -23,7 +23,7 @@ static std::function<void()> callables[size] = {};
  * \brief A static function worker.
  */
 void static_void_function(int value) {
- // Have this thread sleep for 100ms.
+ // Have this thread sleep for a given amount of time.
  std::this_thread::sleep_for(std::chrono::milliseconds(value));
  count++;
 }
