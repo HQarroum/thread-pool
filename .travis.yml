@@ -10,4 +10,4 @@ before_install:
 install:
   - sudo apt-get install -qq gcc-5
 
-script: make test
+script: make tests

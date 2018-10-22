@@ -14,6 +14,7 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 - [Usage](#usage)
 - [Examples](#examples)
 - [Tests](#tests)
+- [Benchmarks](#benchmarks)
 
 ## Description
 
@@ -202,3 +203,7 @@ Different sample usages of the thread-pool can be found in the [examples](exampl
 ## Tests
 
 Different unit tests and benchmarks are available under the [tests](tests/) directory. In order to build the tests and the examples, you can simply run `make` in the project directory. To execute tests, run `make tests`.
+
+## Benchmarks
+
+Ongoing.
