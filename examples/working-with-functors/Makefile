@@ -6,7 +6,7 @@ OUTPUT_FILE = example_output.txt
 
 SRC = main.cpp
 
-CFLAGS = -std=c++11 -I../../includes -W -Wall -Werror
+CFLAGS = -std=c++11 -I../../includes -W -Wall -Werror -O2
 
 LDLIBS = -lpthread
 
