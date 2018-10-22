@@ -201,4 +201,4 @@ Different sample usages of the thread-pool can be found in the [examples](exampl
 
 ## Tests
 
-Different unit tests and benchmarks are available under the [tests](tests/) directory.
+Different unit tests and benchmarks are available under the [tests](tests/) directory. In order to build the tests and the examples, you can simply run `make` in the project directory. To execute tests, run `make tests`.
