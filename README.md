@@ -14,6 +14,7 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 - [Usage](#usage)
 - [Examples](#examples)
 - [Tests](#tests)
+- [Benchmarks](#benchmarks)
 
 ## Description
 
