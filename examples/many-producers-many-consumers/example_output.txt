@@ -1,1 +1,0 @@
-Elasped time : 1032.21 ms

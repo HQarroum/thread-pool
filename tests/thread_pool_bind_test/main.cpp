@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../includes/thread_pool.hpp"
 #include "../includes/thread_pool_callable.hpp"
-#include "./executor/async_executor.hpp"
+#include "../../common/executor/async_executor.hpp"
 
 /**
  * \brief Concurrency level is calculated based on the CPU cores.
@@ -46,7 +46,7 @@ int static_int_function(int foo) {
 /**
  * \brief Application entry point.
  */
-int main(int argc, char* argv[]) {
+int main() {
   thread::pool::pool_t pool(concurrency);
 
   // Bind on a `static_lambda` test.

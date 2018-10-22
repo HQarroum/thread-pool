@@ -5,6 +5,7 @@
 #include <functional>
 #include <thread>
 #include <future>
+#include <type_traits>
 #include <unordered_map>
 
 #include "blocking_concurrent_queue.hpp"
@@ -52,6 +53,16 @@ namespace thread {
      * \brief Type referring to a time value expressed in milliseconds.
      */
     using milliseconds_t = std::chrono::milliseconds::rep;
+
+    /**
+     * \brief Alias type to a `moodycamel::ProducerToken`.
+     */
+    using producer_token_t = moodycamel::ProducerToken;
+
+    /**
+     * \brief Alias type to a `moodycamel::ConsumerToken`.
+     */
+    using consumer_token_t = moodycamel::ConsumerToken;
 
     /**
      * \struct parameterized_pool_t
@@ -104,14 +115,31 @@ namespace thread {
        * threads.
        */
       template<class F, class... Args>
-      std::future<typename std::result_of<F(Args...)>::type> schedule(F&& f, Args&&... args) {
+      std::future<typename std::result_of<F(Args...)>::type> schedule(const moodycamel::ProducerToken& token, F&& f, Args&&... args) {
         using return_type = typename std::result_of<F(Args...)>::type;
-        const moodycamel::ProducerToken producer_token(tasks_);
         auto task = std::make_shared<std::packaged_task<return_type()>>(
           std::bind(std::forward<F>(f), std::forward<Args>(args)...)
         );
         std::future<return_type> future = task->get_future();
-        if (!tasks_.enqueue(producer_token, [task] () { (*task)(); })) {
+        if (!tasks_.enqueue(token, [task] () { (*task)(); })) {
+          throw std::length_error("Couldn't enqueue the given callable object");
+        }
+        return (future);
+      }
+
+      /**
+       * \brief Pushes data of type `Type_` on the internal
+       * blocking queue used to dispatch work to the worker
+       * threads.
+       */
+      template<class F, class... Args>
+      std::future<typename std::result_of<F(Args...)>::type> schedule(F&& f, Args&&... args) {
+        using return_type = typename std::result_of<F(Args...)>::type;
+        auto task = std::make_shared<std::packaged_task<return_type()>>(
+          std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+        );
+        std::future<return_type> future = task->get_future();
+        if (!tasks_.enqueue([task] () { (*task)(); })) {
           throw std::length_error("Couldn't enqueue the given callable object");
         }
         return (future);
@@ -124,11 +152,33 @@ namespace thread {
        * and you want to avoid the performance overhead of it.
        */
       template<class F, class... Args>
+      bool schedule_and_forget(const moodycamel::ProducerToken& token, F&& f, Args&&... args) noexcept {
+        using return_type = typename std::result_of<F(Args...)>::type;
+        std::function<return_type()> bound = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+        return (tasks_.enqueue(token, bound));
+      }
+
+      /**
+       * Same as `.schedule()`, except that this method does not allow clients
+       * of the thread-pool to retrieve the result of their runnable. Use this
+       * method if you do not need to explicitely get the result of your runnable,
+       * and you want to avoid the performance overhead of it.
+       */
+      template<class F, class... Args>
       bool schedule_and_forget(F&& f, Args&&... args) noexcept {
         using return_type = typename std::result_of<F(Args...)>::type;
-        const moodycamel::ProducerToken producer_token(tasks_);
         std::function<return_type()> bound = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-        return (tasks_.enqueue(producer_token, bound));
+        return (tasks_.enqueue(bound));
+      }
+
+      /**
+       * \brief Schedules the execution of an array of runnable
+       * amonst the available worker threads.
+       * \return a true value if the schedule operation was
+       * successful, false otherwise.
+       */
+      bool schedule_bulk(const moodycamel::ProducerToken& token, const consumer_t array[], size_t size) noexcept {
+        return (tasks_.enqueue_bulk(token, array, size));
       }
 
       /**
@@ -138,8 +188,7 @@ namespace thread {
        * successful, false otherwise.
        */
       bool schedule_bulk(const consumer_t array[], size_t size) noexcept {
-        const moodycamel::ProducerToken producer_token(tasks_);
-        return (tasks_.enqueue_bulk(producer_token, array, size));
+        return (tasks_.enqueue_bulk(array, size));
       }
 
       /**
@@ -160,6 +209,26 @@ namespace thread {
       parameterized_pool_t<BULK_MAX_ITEMS, DEQUEUE_TIMEOUT>& stop() noexcept {
         done_.store(true);
         return (*this);
+      }
+
+      /**
+       * \brief Creates a new producer token associated with
+       * the internal queue.
+       */
+      template <typename T>
+      typename std::enable_if<std::is_same<T, producer_token_t>::value, producer_token_t>::type
+      create_token_of() {
+        return (T(tasks_));
+      }
+
+      /**
+       * \brief Creates a new consumer token associated with
+       * the internal queue.
+       */
+      template <typename T>
+      typename std::enable_if<std::is_same<T, consumer_token_t>::value, consumer_token_t>::type
+      create_token_of() {
+        return (T(tasks_));
       }
 
     private:
@@ -186,19 +255,13 @@ namespace thread {
        * consumer worker implementation.
        */
       void worker() {
-        moodycamel::ConsumerToken token(tasks_);
+        auto token = create_token_of<thread::pool::consumer_token_t>();
         while (!done_) {
           consumer_t runnable[BULK_MAX_ITEMS] = {};
           auto available = tasks_.wait_dequeue_bulk_timed(token, runnable, BULK_MAX_ITEMS, std::chrono::milliseconds(DEQUEUE_TIMEOUT));
-          //std::cout << available << std::endl;
           for (size_t i = 0; i < available; ++i) {
-            if (!!runnable[i]) {
-              runnable[i]();
-            }
+            runnable[i]();
           }
-          //for (size_t i = 0; i < available; ++i) {
-            //runnable[i]();
-          //}
         }
       }
     };

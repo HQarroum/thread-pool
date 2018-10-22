@@ -24,11 +24,14 @@ int static_void_function(int argument) {
 int main() {
  thread::pool::pool_t pool(std::thread::hardware_concurrency() + 1);
  
+ // Creating a producer token.
+ auto producer_token = pool.create_token_of<thread::pool::producer_token_t>();
+
  // Filling our array with `iterations` amount of functions,
  // bound to the number `42`.
  std::fill_n(callables, iterations, std::bind(static_void_function, 42));
  // Scheduling the execution in bulk.
- auto result = pool.schedule_bulk(callables, iterations);
+ auto result = pool.schedule_bulk(producer_token, callables, iterations);
  // Log whether the insertion was successful.
  std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
  assert(result == true);

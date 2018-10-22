@@ -1,11 +1,14 @@
 examples:
 	$(MAKE) -C examples/
 
-test:
-	$(MAKE) -C examples/ test
-	$(MAKE) -C tests/ test
+unit_tests:
+	$(MAKE) -C tests/
 
-all: tests examples
+tests:
+	$(MAKE) -C tests/ test
+	$(MAKE) -C examples/ test
+
+all: unit_tests examples tests
 
 clean:
 	$(MAKE) -C examples/ clean
@@ -17,4 +20,4 @@ fclean:
 
 re: fclean all
 
-.PHONY: all examples tests fclean
+.PHONY: all tests examples fclean

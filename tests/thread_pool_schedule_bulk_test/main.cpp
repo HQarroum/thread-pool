@@ -1,8 +1,8 @@
 #include <iostream>
 #include "../includes/thread_pool.hpp"
 #include "../includes/thread_pool_callable.hpp"
-#include "./executor/async_executor.hpp"
-#include "semaphore/semaphore.hpp"
+#include "../../common/executor/async_executor.hpp"
+#include "../../common/semaphore/semaphore.hpp"
 
 /**
  * \brief The number of callables to be scheduled.
