@@ -8,6 +8,8 @@ SRC = main.cpp
 
 CFLAGS = -std=c++11 -I../../includes -W -Wall -Werror
 
+LDLIBS = -lpthread
+
 OBJ = $(SRC:.c=.o)
 
 assert = $(if $(filter whatever,${CROSS_COMPILE}),$(if ${VARIABLE},,$(error Urk! Variable problem)))
@@ -16,7 +18,7 @@ assert = $(if $(filter whatever,${CROSS_COMPILE}),$(if ${VARIABLE},,$(error Urk!
 	$(CXX) -o $@ -c $<
 
 all: $(OBJ)
-	$(CXX) $(CFLAGS) -o $(APP_NAME) $^
+	$(CXX) $(CFLAGS) -o $(APP_NAME) $^ $(LDLIBS)
 
 re: fclean all
 
