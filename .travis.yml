@@ -1,0 +1,13 @@
+language: cpp
+
+compiler:
+  - gcc
+
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install -qq gcc-5
+
+script: make test
