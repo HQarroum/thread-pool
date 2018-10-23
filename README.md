@@ -178,9 +178,11 @@ When you want to interrupt your workers and stop all the threads currently runni
 pool.stop().await();
 ```
 
+As explained in the [Maximum time to block](#maximum-time-to-block) section, the `stop` method will not have immediate effect on the running threads, as the time they spend blocking on the queue affects the reactiveness of the stop request.
+
 ### Using RAII
 
-This thread-pool implementation follow the [`RAII`](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) pattern, meaning that upon destruction, the thread pool object will stop the running thread. Note however that because the thread in which the thread-pool is initialized owns the worker threads, the destruction needs to synchronously wait for the termination of the threads upon destruction.
+This thread-pool implementation follow the [`RAII`](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) pattern, meaning that upon destruction, the thread pool object will stop the running thread. Note that because the thread in which the thread-pool is initialized owns the worker threads, the destructor will synchronously wait for the termination of the threads upon destruction.
 
 In this context, you should in fact rarely be invoking the `stop` or `await` methods explicitely since this will be taken care of by the destructor of a thread pool instance.
 
@@ -194,7 +196,7 @@ In this context, you should in fact rarely be invoking the `stop` or `await` met
 // The thread pool and the worker threads are now terminated.
 ```
 
-> Note however that in the above example the execution of all the given workers is not guaranteed. Upon destruction, the thread-pool instance will prompt the worker threads to finish their execution, which may happen before every elements in the internal queue have been processed.
+> In the above example, the execution of all the given workers is not guaranteed. Upon destruction, the thread-pool instance will prompt the worker threads to finish their execution, which may happen before every elements in the internal queue have been processed.
 
 ## Examples
 
