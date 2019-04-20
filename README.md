@@ -14,11 +14,10 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 - [Usage](#usage)
 - [Examples](#examples)
 - [Tests](#tests)
-- [Benchmarks](#benchmarks)
 
 ## Description
 
-This project is an implementation of a lock-free thread-pool in C++. It aims to make it very easy to implement a [producer-consumer pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem) following C++11 semantics with relatively high performances, although other types of patterns can be implemented on top of this project.
+This project is an implementation of a lock-free thread-pool in C++. It aims to make it very easy to implement a [producer-consumer pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem) following C++11 semantics with relatively high performances, although other types of patterns can also be implemented on top of this project.
 
 <p align="center"><br><br>
  <img width="450" src="docs/controlled-producer-consumer.png" />
@@ -34,7 +33,7 @@ To create a thread-pool instance, you call its constructor by providing it with 
 thread::pool::pool_t pool(std::thread::hardware_concurrency() + 1);
 ```
 
-> Note that `std::thread::hardware_concurrency` returns the number of physical concurrent threads supported by your system. We add 1, since this API can return zero if it was not able to compute the amount of concurrent threads.
+> Note that `std::thread::hardware_concurrency` returns the number of physical concurrent threads supported by your system. We add 1, since this API can return zero if it was not able to compute the amount of concurrent threads available.
 
 ## Scheduling a callable
 
@@ -77,11 +76,11 @@ auto result = pool.schedule_bulk(array_of_callables, length));
 std::cout << "The insertion has " << (result ? "succeeded" : "failed") << std::endl;
 ```
 
-The `schedule_bulk` method returns a boolean value indicating whether the bulk insertion has been successful or not. For a complete sample of how to schedule callables in bulk into the thread-pool have a look at the [`bulk_insertion`](examples/bulk_insertion.cpp) example.
+The `schedule_bulk` method returns a boolean value indicating whether the bulk insertion has been successful or not. For a complete sample of how to schedule callables in bulk into the thread-pool, have a look at the [`bulk_insertion`](examples/bulk_insertion.cpp) example.
 
 ## Functor-style schedules
 
-In addition to the `schedule` method, the thread-pool implementation provides a way to generate functors that can be called like a regular function, but which will instead schedule the execution of your callable on the thread-pool. The functor based syntax provides a more natural way to generate callables and to actually call them.
+In addition to the `schedule` method, this implementation provides a way to generate functors that can be called like a regular function, but which will instead schedule the execution of your callable on the thread-pool. The functor based syntax provides a more natural way to generate callables and to actually call them.
 
 ```c++
 // Binding a callable function with a thread-pool instance.
@@ -107,9 +106,9 @@ sum(1, 2);
 
 ## Working with tokens
 
-The underlying `moodycamel` queue used in this thread-pool implementation can optimize the processing of queued elements by using consumer and producer tokens ([read more](https://github.com/cameron314/concurrentqueue/#tokens)). When dequeuing elements from the queue, the thread-pool already uses an implicit consumer token which is bound to each worker thread.
+The underlying `moodycamel` queue used by the thread-pool can optimize the processing of queued elements by using consumer and producer tokens ([read more](https://github.com/cameron314/concurrentqueue/#tokens)). When dequeuing elements from the queue, the thread-pool already uses an implicit consumer token which is bound to each worker thread.
 
-If you are using multiple producers spread across multiple threads in your implementation, you might want to create a new consumer token which is unique for the lifetime of that thread. Below is an example of how to create such a producer token.
+If you are using multiple producers spread across multiple threads, you might want to create a new consumer token which is unique for the lifetime of that thread. Below is an example of how to create such a producer token.
 
 ```c++
 // Creating a new producer token.
@@ -122,18 +121,18 @@ Every scheduling method (`schedule`, `schedule_and_forget` and `schedule_bulk`) 
 
 ## Pool paramerization
 
-A `thread::pool::parameterized_pool_t` class exists in this implementation and allows you to customized the behavior of the thread-pool at compile time. The thread-pool is made such that workers will dequeue callables from the internal queue in bulk in order to improve performances, as such two parameters have been defined to alter the inner workings of the pool :
+A `thread::pool::parameterized_pool_t` class exists in this implementation and allows you to customize the behavior of the thread-pool at compile time. The thread-pool is made such that workers will dequeue callables from the internal queue in bulk in order to improve performances, as such two parameters have been defined to alter the inner workings of the pool :
 
 ### Maximum items to dequeue
 
-The number of items that the thread-pool will attempt to dequeue has an impact on performances. To customize this, we have defined a few constants that you can use as hints for thread-pool to use when dequeuing callables. Note that when dequeued by workers, callables will be stored on the worker thread's stack, make sure that whatever hint you use, it can fit your thread stack size.
+The number of items that the thread-pool will attempt to dequeue has an impact on performances. To fine tune this impact, we have defined a few constants that you can use as hints for the thread-pool to use when dequeuing callables. Note that when dequeued by workers, callables will be stored on the worker thread's stack, make sure that whatever hint you use, it can fit your thread stack size.
 
 
    - [`WORK_PARTITIONING_LIGHT`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L22) - Hint indicating the use of lightweight processing of tasks within a worker (less elements will be dequeued).
 
    - [`WORK_PARTITIONING_SPARSE`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L28) - Hint indicating the use of sparse processing of tasks within a worker.
     
-   - [`WORK_PARTITIONING_BALANCED`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L34) - Hint indicating the use of a balanced processing of tasks within a worker.
+   - [`WORK_PARTITIONING_BALANCED`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L34) - Hint indicating the use of a balanced processing of tasks within a worker (Used by default).
     
    - [`WORK_PARTITIONING_HEAVY`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L40) - Hint indicating the use of heavy processing of tasks within a worker.
     
@@ -154,7 +153,7 @@ thread::pool::parameterized_pool_t<thread::pool::WORK_PARTITIONING_LIGHT> pool(
 
 Before the internal worker threads actually executes the enqueued callables, they will block awaiting for an element in the internal queue to be available. To allow clients of the thread-pool to stop it, a maximum amount of time that the worker thread spends waiting is used, and each time we'll reach that timeout, the worker thread will unblock and check whether it needs to stop its processing.
 
-This parameter can have both an impact on performances and on the reactivity of the pool. If the timeout is too low, a `stop` operation will be quicker, but at the expense of worker threads to consume more CPU cycles unblocking and checking whether they should stop their process. If it is too high, CPU cycles waiste will be lower, but the worker threads will react more slowly to a `stop` operation.
+This parameter can have both an impact on performances and on the reactivity of the pool. If the timeout is too low, a `stop` operation will be quicker, but at the expense of worker threads consuming more CPU cycles unblocking and checking whether they should stop their process. If it is too high, CPU cycles waiste will be lower, but the worker threads will react slower to a `stop` operation.
 
 The `parameterized_pool_t` can take a second optional template parameter to set this timeout manually.
 
@@ -205,7 +204,3 @@ Different sample usages of the thread-pool can be found in the [examples](exampl
 ## Tests
 
 Different unit tests and benchmarks are available under the [tests](tests/) directory. In order to build the tests and the examples, you can simply run `make` in the project directory. To execute tests, run `make tests`.
-
-## Benchmarks
-
-Ongoing.
