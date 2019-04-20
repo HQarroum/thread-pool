@@ -132,7 +132,7 @@ The number of items that the thread-pool will attempt to dequeue has an impact o
 
    - [`WORK_PARTITIONING_SPARSE`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L28) - Hint indicating the use of sparse processing of tasks within a worker.
     
-   - [`WORK_PARTITIONING_BALANCED`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L34) - Hint indicating the use of a balanced processing of tasks within a worker (Used by default).
+   - [`WORK_PARTITIONING_BALANCED`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L34) - Hint indicating the use of a balanced processing of tasks within a worker.
     
    - [`WORK_PARTITIONING_HEAVY`](https://github.com/HQarroum/thread-pool/blob/master/thread_pool.hpp#L40) - Hint indicating the use of heavy processing of tasks within a worker.
     
