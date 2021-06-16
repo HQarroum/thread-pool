@@ -1,47 +1,47 @@
 #include <iostream>
 #include <set>
+#include <future>
+#include <list>
+#include <random>
 #include "../../includes/thread_pool.hpp"
 #include "../../includes/thread_pool_callable.hpp"
-
-/**
- * \brief An atomic counter keeping track of the
- * amount of produced work.
- */
-static std::atomic<size_t> count;
 
 /**
  * \brief The number of work to distribute across
  * consumers.
  */
-static const size_t work_to_spawn = 1000;
+static const size_t work_to_spawn = 10000;
 
 /**
  * \brief Static void function declaration.
  */
-int static_void_function(int value) {
-  count++;
-  return (++value);
+static void static_void_function() {
+  std::this_thread::sleep_for(std::chrono::microseconds(1000));
 }
 
 /**
  * \brief Application entry point.
  */
 int main() {
-  // Producer and consumer thread pools.
-  thread::pool::pool_t pool_of_consumers(5);
 
-  // Counting the start time.
-  auto start = std::chrono::high_resolution_clock::now();
+  // A list of futures.
+  std::list<std::future<void>> list;
+
+  // Producer and consumer thread pools.
+  thread::pool::parameterized_pool_t<1, 0> pool_of_consumers(std::thread::hardware_concurrency() + 1);
 
   // Scheduling the producers.
   for (size_t i = 0; i < work_to_spawn; ++i) {
-    auto result = pool_of_consumers.schedule(static_void_function, i);
-    assert(result.get() == (int) (i + 1));
+    list.push_back(pool_of_consumers.schedule(static_void_function));
   }
   
+  // Counting the start time.
+  auto start = std::chrono::high_resolution_clock::now();
+
   // Waiting for the consumers to complete.
-  while (count < work_to_spawn)
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  for (std::future<void>& future : list) {
+    future.wait();
+  }
 
   // Measuring and dumping the elapsed time.
   auto end = std::chrono::high_resolution_clock::now();
