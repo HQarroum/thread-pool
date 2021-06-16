@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/HQarroum/thread-pool.svg?branch=master)](https://travis-ci.org/HQarroum/thread-pool)
 ![Production ready](https://img.shields.io/badge/status-experimental-brightgreen.svg)
 
-Current version: **1.0.0**
+Current version: **1.0.1**
 
 Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 
